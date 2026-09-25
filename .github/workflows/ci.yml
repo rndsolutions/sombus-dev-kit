@@ -17,6 +17,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Validator dependencies
+        # validate_som_skill.py imports PyYAML at run time; the other four are standard library only
+        run: pip install pyyaml
       - name: Upstream is byte-for-byte the pinned commit
         run: scripts/verify-upstream.sh
       - name: Skill library validators (upstream's own five)

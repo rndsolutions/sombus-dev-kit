@@ -20,6 +20,7 @@ Where a skill's prose and the schema disagree, **the schema is right**. Implemen
 ## Running the checks
 
 ```bash
+pip install pyyaml                  # validate_som_skill.py needs it
 scripts/verify-upstream.sh
 scripts/check-upstream-skills.sh
 ```
