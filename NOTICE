@@ -1,0 +1,18 @@
+sombus-skills-ref
+Copyright 2026 RND Solutions
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE).
+
+This product includes material from the Story Object Model
+(https://github.com/storyobjectmodel/som), commit
+7297fef9adc6d14a74bdd7550c78decaa099a1ad, in upstream/som-1.0/:
+
+  - schemas, examples, tools and the som-skill-library 0.2.2,
+    Copyright the SOM authors, licensed under the Apache License, Version 2.0
+    (upstream/som-1.0/LICENSE);
+  - specification prose, Copyright the SOM authors, licensed under
+    Creative Commons Attribution 4.0 International (upstream/som-1.0/LICENSE-SPEC).
+
+The Story Object Model is an open standard maintained by the SOM working group.
+This product is an independent implementation. It is not endorsed by the SOM
+working group and certifies nothing.

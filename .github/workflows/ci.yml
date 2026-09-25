@@ -1,0 +1,23 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+    branches: [main, develop]
+
+permissions:
+  contents: read
+
+jobs:
+  upstream:
+    name: pinned upstream and skill library checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Upstream is byte-for-byte the pinned commit
+        run: scripts/verify-upstream.sh
+      - name: Skill library validators (upstream's own five)
+        run: scripts/check-upstream-skills.sh
