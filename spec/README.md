@@ -10,4 +10,3 @@
   It's built on the library's own [`CONVENTIONS.md`](../upstream/som-1.0/skills/docs/CONVENTIONS.md).
 - **`POSITIONS.md`** (to come): one id per RND position on a question the library leaves open (for example, who turns a raised flag into an editorial gate). Each position cites the upstream `spec/open-register.md` item it answers, is labelled an RND position rather than the standard, and is offered upstream.
 
-Tracked in som-bus-reference #62.

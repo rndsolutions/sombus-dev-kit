@@ -1,0 +1,127 @@
+{
+  "kind": "envelope",
+  "clock": "2026-09-11T16:41:00.000Z",
+  "cases": [
+    {
+      "id": "minimal-story-context",
+      "description": "Defaults: som_version, UUIDv7 ids from the clock, RFC 3339 UTC timestamp, topic som.<message_type>",
+      "input": {
+        "message_type": "story.context",
+        "payload": { "story_id": "kit-001", "sequence_number": 1 },
+        "originating_system": { "system_id": "acme-ncs-test", "system_type": "ncs" }
+      },
+      "expect": {
+        "fields": {
+          "som_version": "1.0.0",
+          "message_type": "story.context",
+          "timestamp": "2026-09-11T16:41:00.000Z",
+          "topic": "som.story.context",
+          "originating_system": { "system_id": "acme-ncs-test", "system_type": "ncs" },
+          "payload": { "story_id": "kit-001", "sequence_number": 1 }
+        },
+        "absent": ["causation_id", "extensions", "signature", "source"],
+        "uuidv7": { "message_id": "01a09158-0560-7", "correlation_id": "01a09158-0560-7" }
+      }
+    },
+    {
+      "id": "keeps-story-correlation",
+      "description": "A later message about the same story carries its correlation_id",
+      "input": {
+        "message_type": "story.context",
+        "payload": { "story_id": "kit-001", "sequence_number": 2 },
+        "originating_system": { "system_id": "acme-ncs-test", "system_type": "ncs" },
+        "correlation_id": "01920000-0000-7000-8000-00000000c0de"
+      },
+      "expect": { "fields": { "correlation_id": "01920000-0000-7000-8000-00000000c0de" } }
+    },
+    {
+      "id": "follow-up",
+      "description": "A message caused by another: same correlation_id, causation_id = the cause's message_id",
+      "follow": { "message_id": "01920000-0000-7000-8000-0000000000aa", "correlation_id": "01920000-0000-7000-8000-0000000000bb" },
+      "input": {
+        "message_type": "skill.warning.raised",
+        "payload": { "warning_id": "01920000-0000-7000-8000-0000000000cc" },
+        "originating_system": { "system_id": "acme-skills", "system_type": "skill_worker" }
+      },
+      "expect": {
+        "fields": {
+          "correlation_id": "01920000-0000-7000-8000-0000000000bb",
+          "causation_id": "01920000-0000-7000-8000-0000000000aa",
+          "topic": "som.skill.warning.raised"
+        }
+      }
+    },
+    {
+      "id": "explicit-timestamp-and-extensions",
+      "input": {
+        "message_type": "telling.started",
+        "payload": { "message_type": "telling.started" },
+        "originating_system": { "system_id": "acme-web", "system_type": "custom" },
+        "timestamp": "2026-09-11T18:41:00.123456+02:00",
+        "extensions": { "com.acme.trace": { "hop": 1 } }
+      },
+      "expect": {
+        "fields": { "timestamp": "2026-09-11T18:41:00.123456+02:00", "extensions": { "com.acme.trace": { "hop": 1 } } }
+      }
+    },
+    {
+      "id": "rebuild-keeps-message-id",
+      "description": "Rebuilding a message already sent (for a resend) keeps its message_id",
+      "input": {
+        "message_type": "story.context",
+        "payload": { "story_id": "kit-001", "sequence_number": 1 },
+        "originating_system": { "system_id": "acme-ncs-test", "system_type": "ncs" },
+        "message_id": "01920000-0000-7000-8000-000000000123"
+      },
+      "expect": { "fields": { "message_id": "01920000-0000-7000-8000-000000000123" } }
+    },
+    {
+      "id": "topic-must-be-som",
+      "input": {
+        "message_type": "story.context", "payload": {}, "topic": "story.context.hurricane",
+        "originating_system": { "system_id": "acme-ncs-test", "system_type": "ncs" }
+      },
+      "expect": { "error": "topic" }
+    },
+    {
+      "id": "extensions-must-be-namespaced",
+      "input": {
+        "message_type": "story.context", "payload": {}, "extensions": { "trace": 1 },
+        "originating_system": { "system_id": "acme-ncs-test", "system_type": "ncs" }
+      },
+      "expect": { "error": "extensions" }
+    },
+    {
+      "id": "message-type-pattern",
+      "input": {
+        "message_type": "Story.Context", "payload": {},
+        "originating_system": { "system_id": "acme-ncs-test", "system_type": "ncs" }
+      },
+      "expect": { "error": "message_type" }
+    },
+    {
+      "id": "correlation-id-must-be-uuid",
+      "input": {
+        "message_type": "story.context", "payload": {}, "correlation_id": "hurricane-2026",
+        "originating_system": { "system_id": "acme-ncs-test", "system_type": "ncs" }
+      },
+      "expect": { "error": "correlation_id" }
+    },
+    {
+      "id": "timestamp-needs-a-zone",
+      "input": {
+        "message_type": "story.context", "payload": {}, "timestamp": "2026-09-11T16:41:00",
+        "originating_system": { "system_id": "acme-ncs-test", "system_type": "ncs" }
+      },
+      "expect": { "error": "timestamp" }
+    },
+    {
+      "id": "originating-system-required",
+      "input": {
+        "message_type": "story.context", "payload": {},
+        "originating_system": { "system_id": "acme-ncs-test" }
+      },
+      "expect": { "error": "originating_system" }
+    }
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "kit_version": "0.1.0",
+  "suite": "som-1.0.0+lib-0.2.2",
+  "examples_root": "upstream/som-1.0/examples",
+  "wrap_envelope": {
+    "som_version": "1.0.0",
+    "message_id": "01920000-0000-7000-8000-000000000001",
+    "correlation_id": "01920000-0000-7000-8000-000000000002",
+    "message_type": "{message_type}",
+    "timestamp": "2026-09-11T16:41:00Z",
+    "originating_system": { "system_id": "conformance-kit", "system_type": "custom" },
+    "topic": "som.{message_type}",
+    "payload": "{payload}"
+  },
+  "files": {
+    "validation": "cases/validation.json",
+    "envelope": "cases/envelope.json",
+    "verdicts": "cases/verdicts.json",
+    "retry": "cases/retry.json"
+  }
+}

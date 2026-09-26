@@ -7,4 +7,4 @@ One folder per upstream library skill, named after it (`raise-flag-on-match/`, â
 
 Warnings carry the upstream identity: `skill_id` `smart-stories/<skill>`, `skill_version` `0.2.2`.
 
-First: `raise-flag-on-match`, `gate-by-scope`, `flag-on-mismatch`. Tracked in som-bus-reference #67.
+First: `raise-flag-on-match`, `gate-by-scope`, `flag-on-mismatch`.

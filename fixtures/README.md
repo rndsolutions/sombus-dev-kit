@@ -7,4 +7,4 @@ Synthetic test cases per skill, translated from each skill's evaluation table (s
 
 Cases that need a message type SOM 1.0 doesn't define (e.g. `asset.ingested`) are kept and labelled **pending spec**, not dropped.
 
-Versioned by suite id: `som-1.0.0+lib-0.2.2`. Tracked in som-bus-reference #66 and #67.
+Versioned by suite id: `som-1.0.0+lib-0.2.2`.

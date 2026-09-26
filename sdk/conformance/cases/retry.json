@@ -1,0 +1,100 @@
+{
+  "kind": "retry",
+  "policy": { "max_attempts": 5, "base_delay_ms": 500, "max_delay_ms": 30000 },
+  "random": 1,
+  "notes": "Scripted answers to successive publish attempts. 'network_error' and 'timeout' mean no answer. Runners inject random = 1, so each delay is its ceiling. token_fetches counts calls to the token endpoint, starting from an empty cache.",
+  "cases": [
+    {
+      "id": "accepted-first-time",
+      "responses": [ { "status": 202, "body": { "accepted": true, "message_id": "{message_id}", "message_type": "story.context", "family": "story-context" } } ],
+      "expect": { "outcome": "accepted", "attempts": 1, "delays_ms": [], "token_fetches": 1 }
+    },
+    {
+      "id": "publish-failed-then-accepted",
+      "responses": [
+        { "status": 503, "body": { "accepted": false, "violations": [ { "source": "policy", "rule": "bus.publish_failed", "message": "retry" } ] } },
+        { "status": 202, "body": { "accepted": true, "message_id": "{message_id}", "message_type": "story.context", "family": "story-context" } }
+      ],
+      "expect": { "outcome": "accepted", "attempts": 2, "delays_ms": [500], "same_body": true, "token_fetches": 1 }
+    },
+    {
+      "id": "lost-answer-then-duplicate",
+      "description": "The first attempt arrived but its answer was lost: the resend is recognised",
+      "responses": [ "timeout", { "status": 200, "body": { "accepted": true, "duplicate": true, "message_id": "{message_id}" } } ],
+      "expect": { "outcome": "duplicate", "attempts": 2, "delays_ms": [500], "same_body": true }
+    },
+    {
+      "id": "network-errors-then-accepted",
+      "responses": [ "network_error", "network_error", "network_error",
+        { "status": 202, "body": { "accepted": true, "message_id": "{message_id}", "message_type": "story.context", "family": "story-context" } } ],
+      "expect": { "outcome": "accepted", "attempts": 4, "delays_ms": [500, 1000, 2000], "same_body": true }
+    },
+    {
+      "id": "edge-timeout-then-accepted",
+      "responses": [ { "status": 504, "body": { "message": "Endpoint request timed out" } },
+        { "status": 202, "body": { "accepted": true, "message_id": "{message_id}", "message_type": "story.context", "family": "story-context" } } ],
+      "expect": { "outcome": "accepted", "attempts": 2, "delays_ms": [500] }
+    },
+    {
+      "id": "throttled-honours-retry-after",
+      "responses": [ { "status": 429, "headers": { "retry-after": "2" }, "body": { "message": "Too Many Requests" } },
+        { "status": 202, "body": { "accepted": true, "message_id": "{message_id}", "message_type": "story.context", "family": "story-context" } } ],
+      "expect": { "outcome": "accepted", "attempts": 2, "delays_ms": [2000] }
+    },
+    {
+      "id": "retry-after-capped",
+      "responses": [ { "status": 429, "headers": { "retry-after": "120" }, "body": { "message": "Too Many Requests" } },
+        { "status": 202, "body": { "accepted": true, "message_id": "{message_id}", "message_type": "story.context", "family": "story-context" } } ],
+      "expect": { "outcome": "accepted", "attempts": 2, "delays_ms": [30000] }
+    },
+    {
+      "id": "throttled-until-exhausted",
+      "responses": [ { "status": 429, "body": { "message": "Too Many Requests" } }, { "status": 429, "body": { "message": "Too Many Requests" } },
+        { "status": 429, "body": { "message": "Too Many Requests" } }, { "status": 429, "body": { "message": "Too Many Requests" } },
+        { "status": 429, "body": { "message": "Too Many Requests" } } ],
+      "expect": { "outcome": "unavailable", "attempts": 5, "delays_ms": [500, 1000, 2000, 4000], "last_rule": "http.429" }
+    },
+    {
+      "id": "no-answer-until-exhausted",
+      "responses": [ "network_error", "network_error", "network_error", "network_error", "network_error" ],
+      "expect": { "outcome": "unavailable", "attempts": 5, "delays_ms": [500, 1000, 2000, 4000] }
+    },
+    {
+      "id": "expired-token-refreshed-once",
+      "responses": [ { "status": 401, "body": { "accepted": false, "violations": [ { "source": "policy", "rule": "producer.unauthenticated", "message": "expired" } ] } },
+        { "status": 202, "body": { "accepted": true, "message_id": "{message_id}", "message_type": "story.context", "family": "story-context" } } ],
+      "expect": { "outcome": "accepted", "attempts": 2, "delays_ms": [], "token_fetches": 2 }
+    },
+    {
+      "id": "second-401-is-configuration",
+      "responses": [ { "status": 401, "body": { "accepted": false, "violations": [ { "source": "policy", "rule": "producer.unauthenticated", "message": "bad" } ] } },
+        { "status": 401, "body": { "accepted": false, "violations": [ { "source": "policy", "rule": "producer.unauthenticated", "message": "bad" } ] } } ],
+      "expect": { "outcome": "refused", "attempts": 2, "delays_ms": [], "token_fetches": 2, "rule": "producer.unauthenticated" }
+    },
+    {
+      "id": "schema-refusal-not-retried",
+      "responses": [ { "status": 400, "body": { "accepted": false, "violations": [ { "source": "schema", "rule": "envelope.format.uuid", "message": "uuid", "path": "/correlation_id" } ] } } ],
+      "expect": { "outcome": "refused", "attempts": 1, "delays_ms": [], "rule": "envelope.format.uuid" }
+    },
+    {
+      "id": "not-registered-not-retried",
+      "responses": [ { "status": 403, "body": { "accepted": false, "violations": [ { "source": "policy", "rule": "producer.not_registered", "message": "ask RND" } ] } } ],
+      "expect": { "outcome": "refused", "attempts": 1, "delays_ms": [], "rule": "producer.not_registered" }
+    },
+    {
+      "id": "stale-snapshot-not-retried",
+      "responses": [ { "status": 409, "body": { "accepted": false, "violations": [ { "source": "sequence", "rule": "sequence_number.not_increasing", "message": "stale" } ] } } ],
+      "expect": { "outcome": "refused", "attempts": 1, "delays_ms": [], "rule": "sequence_number.not_increasing" }
+    },
+    {
+      "id": "contention-not-retried-by-sdk",
+      "responses": [ { "status": 409, "body": { "accepted": false, "violations": [ { "source": "policy", "rule": "commit.contention", "message": "rebuild" } ] } } ],
+      "expect": { "outcome": "refused", "attempts": 1, "delays_ms": [], "rule": "commit.contention" }
+    },
+    {
+      "id": "too-large-not-retried",
+      "responses": [ { "status": 413, "body": { "accepted": false, "violations": [ { "source": "policy", "rule": "message.too_large", "message": "references, not content" } ] } } ],
+      "expect": { "outcome": "refused", "attempts": 1, "delays_ms": [], "rule": "message.too_large" }
+    }
+  ]
+}

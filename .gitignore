@@ -1,8 +1,8 @@
-__pycache__/
 *.pyc
-node_modules/
-dist/
-coverage/
+.DS_Store
 .env
 .env.*
-.DS_Store
+__pycache__/
+coverage/
+dist/
+node_modules/

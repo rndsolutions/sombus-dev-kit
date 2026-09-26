@@ -1,0 +1,478 @@
+{
+  "kind": "validation",
+  "cases": [
+    {
+      "id": "hurricane-run/hurricane-01",
+      "file": "hurricane-run/hurricane-01.json",
+      "wrap": "story.context",
+      "expect": {
+        "ok": true,
+        "family": "story-context"
+      }
+    },
+    {
+      "id": "hurricane-run/hurricane-02",
+      "file": "hurricane-run/hurricane-02.json",
+      "wrap": "story.context",
+      "expect": {
+        "ok": true,
+        "family": "story-context"
+      }
+    },
+    {
+      "id": "hurricane-run/hurricane-03",
+      "file": "hurricane-run/hurricane-03.json",
+      "wrap": "story.context",
+      "expect": {
+        "ok": true,
+        "family": "story-context"
+      }
+    },
+    {
+      "id": "hurricane-run/hurricane-04",
+      "file": "hurricane-run/hurricane-04.json",
+      "wrap": "story.context",
+      "expect": {
+        "ok": true,
+        "family": "story-context"
+      }
+    },
+    {
+      "id": "hurricane-run/hurricane-05",
+      "file": "hurricane-run/hurricane-05.json",
+      "wrap": "story.context",
+      "expect": {
+        "ok": true,
+        "family": "story-context"
+      }
+    },
+    {
+      "id": "hurricane-run/hurricane-06",
+      "file": "hurricane-run/hurricane-06.json",
+      "wrap": "story.context",
+      "expect": {
+        "ok": true,
+        "family": "story-context"
+      }
+    },
+    {
+      "id": "hurricane-run/hurricane-07",
+      "file": "hurricane-run/hurricane-07.json",
+      "wrap": "story.context",
+      "expect": {
+        "ok": true,
+        "family": "story-context"
+      }
+    },
+    {
+      "id": "story-context/hurricane-beat6-envelope",
+      "file": "story-context/hurricane-beat6-envelope.json",
+      "expect": {
+        "ok": true,
+        "family": "story-context"
+      }
+    },
+    {
+      "id": "story-context/hurricane-beat6",
+      "file": "story-context/hurricane-beat6.json",
+      "wrap": "story.context",
+      "expect": {
+        "ok": true,
+        "family": "story-context"
+      }
+    },
+    {
+      "id": "story-context/orphan-shell",
+      "file": "story-context/orphan-shell.json",
+      "wrap": "story.context",
+      "expect": {
+        "ok": true,
+        "family": "story-context"
+      }
+    },
+    {
+      "id": "story-context/tags",
+      "file": "story-context/tags.json",
+      "wrap": "story.context",
+      "expect": {
+        "ok": true,
+        "family": "story-context"
+      }
+    },
+    {
+      "id": "telling/started-with-transforms",
+      "file": "telling/started-with-transforms.json",
+      "wrap": "telling.started",
+      "expect": {
+        "ok": true,
+        "family": "telling-event"
+      }
+    },
+    {
+      "id": "telling/started",
+      "file": "telling/started.json",
+      "wrap": "telling.started",
+      "expect": {
+        "ok": true,
+        "family": "telling-event"
+      }
+    },
+    {
+      "id": "delivery/locator",
+      "file": "delivery/locator.json",
+      "wrap": "delivery.media_available",
+      "expect": {
+        "ok": true,
+        "family": "delivery-media-available"
+      }
+    },
+    {
+      "id": "delivery/media-available",
+      "file": "delivery/media-available.json",
+      "wrap": "delivery.media_available",
+      "expect": {
+        "ok": true,
+        "family": "delivery-media-available"
+      }
+    },
+    {
+      "id": "link/committed",
+      "file": "link/committed.json",
+      "wrap": "link.committed",
+      "expect": {
+        "ok": true,
+        "family": "link-event"
+      }
+    },
+    {
+      "id": "system-audit/suppressed",
+      "file": "system-audit/suppressed.json",
+      "wrap": "system.audit",
+      "expect": {
+        "ok": true,
+        "family": "system-audit"
+      }
+    },
+    {
+      "id": "skill-warning/raised",
+      "file": "skill-warning/raised.json",
+      "wrap": "skill.warning.raised",
+      "expect": {
+        "ok": true,
+        "family": "skill-warning"
+      }
+    },
+    {
+      "id": "negative/audit-flat-actor",
+      "file": "negative/audit-flat-actor.json",
+      "select": "message",
+      "wrap": "system.audit",
+      "because": "audit carries actor{} and recorded_at, not flat actor_id",
+      "expect": {
+        "ok": false,
+        "sources": [
+          "schema"
+        ],
+        "rules": [
+          "system-audit.additionalProperties",
+          "system-audit.required"
+        ]
+      }
+    },
+    {
+      "id": "negative/delivery-neither-source-nor-locator",
+      "file": "negative/delivery-neither-source-nor-locator.json",
+      "select": "message",
+      "wrap": "delivery.media_available",
+      "because": "delivery.media_available must carry a source or a locator",
+      "expect": {
+        "ok": false,
+        "sources": [
+          "schema"
+        ],
+        "rules": [
+          "delivery-media-available.anyOf",
+          "delivery-media-available.required"
+        ]
+      }
+    },
+    {
+      "id": "negative/envelope-extensions-not-namespaced",
+      "file": "negative/envelope-extensions-not-namespaced.json",
+      "select": "message",
+      "because": "extensions keys must be reverse-domain namespaced com.{vendor}.*",
+      "expect": {
+        "ok": false,
+        "sources": [
+          "schema"
+        ],
+        "rules": [
+          "envelope.additionalProperties"
+        ]
+      }
+    },
+    {
+      "id": "negative/envelope-message-id-not-uuid",
+      "file": "negative/envelope-message-id-not-uuid.json",
+      "select": "message",
+      "because": "message_id must be a UUID; format is asserted at 1.0",
+      "expect": {
+        "ok": false,
+        "sources": [
+          "schema"
+        ],
+        "rules": [
+          "envelope.format.uuid"
+        ]
+      }
+    },
+    {
+      "id": "negative/envelope-missing-correlation-id",
+      "file": "negative/envelope-missing-correlation-id.json",
+      "select": "message",
+      "because": "correlation_id is required on every message (decision #18)",
+      "expect": {
+        "ok": false,
+        "sources": [
+          "schema"
+        ],
+        "rules": [
+          "envelope.required"
+        ]
+      }
+    },
+    {
+      "id": "negative/envelope-signature-not-allowed",
+      "file": "negative/envelope-signature-not-allowed.json",
+      "select": "message",
+      "because": "signature is not part of the 1.0 envelope",
+      "expect": {
+        "ok": false,
+        "sources": [
+          "schema"
+        ],
+        "rules": [
+          "envelope.false_schema"
+        ]
+      }
+    },
+    {
+      "id": "negative/envelope-som-version-0-3-2",
+      "file": "negative/envelope-som-version-0-3-2.json",
+      "select": "message",
+      "because": "som_version 0.3.2 is not SOM 1.0; 1.0.0 is the only wire version",
+      "expect": {
+        "ok": false,
+        "sources": [
+          "conformance"
+        ],
+        "rules": [
+          "som_version.pre_1_0"
+        ]
+      }
+    },
+    {
+      "id": "negative/envelope-source-not-allowed",
+      "file": "negative/envelope-source-not-allowed.json",
+      "select": "message",
+      "because": "source was renamed originating_system in v0.3 and is rejected",
+      "expect": {
+        "ok": false,
+        "sources": [
+          "schema"
+        ],
+        "rules": [
+          "envelope.false_schema"
+        ]
+      }
+    },
+    {
+      "id": "negative/envelope-system-type-unknown",
+      "file": "negative/envelope-system-type-unknown.json",
+      "select": "message",
+      "because": "originating_system.system_type is a closed enum",
+      "expect": {
+        "ok": false,
+        "sources": [
+          "schema"
+        ],
+        "rules": [
+          "envelope.enum"
+        ]
+      }
+    },
+    {
+      "id": "negative/envelope-timestamp-not-date-time",
+      "file": "negative/envelope-timestamp-not-date-time.json",
+      "select": "message",
+      "because": "timestamp must be RFC 3339 date-time",
+      "expect": {
+        "ok": false,
+        "sources": [
+          "schema"
+        ],
+        "rules": [
+          "envelope.format.date-time"
+        ]
+      }
+    },
+    {
+      "id": "negative/envelope-topic-not-som",
+      "file": "negative/envelope-topic-not-som.json",
+      "select": "message",
+      "because": "topic must begin with som.",
+      "expect": {
+        "ok": false,
+        "sources": [
+          "schema"
+        ],
+        "rules": [
+          "envelope.pattern"
+        ]
+      }
+    },
+    {
+      "id": "negative/envelope-unknown-property",
+      "file": "negative/envelope-unknown-property.json",
+      "select": "message",
+      "because": "the envelope permits no unknown properties",
+      "expect": {
+        "ok": false,
+        "sources": [
+          "schema"
+        ],
+        "rules": [
+          "envelope.additionalProperties"
+        ]
+      }
+    },
+    {
+      "id": "negative/link-gate-status-unknown",
+      "file": "negative/link-gate-status-unknown.json",
+      "select": "message",
+      "wrap": "link.committed",
+      "because": "compliance_gate_status is PENDING, CLEARED or BLOCKED",
+      "expect": {
+        "ok": false,
+        "sources": [
+          "schema"
+        ],
+        "rules": [
+          "link-event.enum"
+        ]
+      }
+    },
+    {
+      "id": "negative/story-context-ai-enrichments",
+      "file": "negative/story-context-ai-enrichments.json",
+      "select": "message",
+      "wrap": "story.context",
+      "because": "ai_enrichments[] was removed in v0.3.2 and is rejected",
+      "expect": {
+        "ok": false,
+        "sources": [
+          "schema"
+        ],
+        "rules": [
+          "story-context.false_schema"
+        ]
+      }
+    },
+    {
+      "id": "negative/story-context-asset-status-finalizing",
+      "file": "negative/story-context-asset-status-finalizing.json",
+      "select": "message",
+      "wrap": "story.context",
+      "because": "FINALIZING was withdrawn at 1.0 (see spec/open-register.md)",
+      "expect": {
+        "ok": false,
+        "sources": [
+          "schema"
+        ],
+        "rules": [
+          "story-context.enum"
+        ]
+      }
+    },
+    {
+      "id": "negative/story-context-asset-voice-count",
+      "file": "negative/story-context-asset-voice-count.json",
+      "select": "message",
+      "wrap": "story.context",
+      "because": "voice_count was withdrawn at 1.0; assets permit no unknown properties",
+      "expect": {
+        "ok": false,
+        "sources": [
+          "schema"
+        ],
+        "rules": [
+          "story-context.additionalProperties"
+        ]
+      }
+    },
+    {
+      "id": "negative/story-context-lifecycle-phase-live",
+      "file": "negative/story-context-lifecycle-phase-live.json",
+      "select": "message",
+      "wrap": "story.context",
+      "because": "LIVE is derived from the Telling, never stored on the story (decision #16)",
+      "expect": {
+        "ok": false,
+        "sources": [
+          "schema"
+        ],
+        "rules": [
+          "story-context.enum"
+        ]
+      }
+    },
+    {
+      "id": "negative/story-context-missing-story-id",
+      "file": "negative/story-context-missing-story-id.json",
+      "select": "message",
+      "wrap": "story.context",
+      "because": "story_id is required",
+      "expect": {
+        "ok": false,
+        "sources": [
+          "schema"
+        ],
+        "rules": [
+          "story-context.required"
+        ]
+      }
+    },
+    {
+      "id": "negative/telling-transform-id",
+      "file": "negative/telling-transform-id.json",
+      "select": "message",
+      "wrap": "telling.started",
+      "because": "transform_id was withdrawn at 1.0",
+      "expect": {
+        "ok": false,
+        "sources": [
+          "schema"
+        ],
+        "rules": [
+          "telling-event.additionalProperties"
+        ]
+      }
+    },
+    {
+      "id": "negative/telling-transform-missing-type",
+      "file": "negative/telling-transform-missing-type.json",
+      "select": "message",
+      "wrap": "telling.started",
+      "because": "every transform must declare transform_type",
+      "expect": {
+        "ok": false,
+        "sources": [
+          "schema"
+        ],
+        "rules": [
+          "telling-event.required"
+        ]
+      }
+    }
+  ]
+}

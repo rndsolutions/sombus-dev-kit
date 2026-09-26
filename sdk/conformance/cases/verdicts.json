@@ -1,0 +1,157 @@
+{
+  "kind": "verdicts",
+  "cases": [
+    {
+      "id": "accepted",
+      "response": { "status": 202, "body": { "accepted": true, "message_id": "01920000-0000-7000-8000-000000000001", "message_type": "story.context", "family": "story-context" } },
+      "expect": { "kind": "accepted", "message_id": "01920000-0000-7000-8000-000000000001", "family": "story-context", "tolerated_rules": [] }
+    },
+    {
+      "id": "accepted-with-tolerated",
+      "response": { "status": 202, "body": { "accepted": true, "message_id": "01920000-0000-7000-8000-000000000001", "message_type": "story.context", "family": "story-context",
+        "tolerated": [ { "source": "sequence", "rule": "sequence_number.gap", "message": "legal, but a snapshot may be missing", "path": "/payload/sequence_number" } ] } },
+      "expect": { "kind": "accepted", "tolerated_rules": ["sequence_number.gap"] }
+    },
+    {
+      "id": "accepted-unknown-family",
+      "response": { "status": 202, "body": { "accepted": true, "message_id": "01920000-0000-7000-8000-000000000001", "message_type": "asset.ingested", "family": null,
+        "tolerated": [ { "source": "policy", "rule": "payload.unvalidated", "message": "no published schema", "path": "/payload" } ] } },
+      "expect": { "kind": "accepted", "family": null, "tolerated_rules": ["payload.unvalidated"] }
+    },
+    {
+      "id": "duplicate",
+      "response": { "status": 200, "body": { "accepted": true, "duplicate": true, "message_id": "01920000-0000-7000-8000-000000000001" } },
+      "expect": { "kind": "duplicate", "message_id": "01920000-0000-7000-8000-000000000001" }
+    },
+    {
+      "id": "schema-format-uuid",
+      "response": { "status": 400, "body": { "accepted": false, "violations": [ { "source": "schema", "rule": "envelope.format.uuid", "message": "must be a valid uuid", "path": "/message_id" } ] } },
+      "expect": { "kind": "refused", "source": "schema", "rule": "envelope.format.uuid", "path": "/message_id", "retry": "none" }
+    },
+    {
+      "id": "schema-several-violations",
+      "response": { "status": 400, "body": { "accepted": false, "violations": [
+        { "source": "schema", "rule": "story-context.required", "message": "must have required property 'story_id'", "path": "/payload" },
+        { "source": "schema", "rule": "story-context.enum", "message": "must be one of [...]", "path": "/payload/lifecycle_phase" } ] } },
+      "expect": { "kind": "refused", "source": "schema", "rule": "story-context.required", "rules": ["story-context.required", "story-context.enum"], "retry": "none" }
+    },
+    {
+      "id": "not-json",
+      "response": { "status": 400, "body": { "accepted": false, "violations": [ { "source": "schema", "rule": "message.not_json", "message": "body is not valid JSON" } ] } },
+      "expect": { "kind": "refused", "source": "schema", "rule": "message.not_json", "retry": "none" }
+    },
+    {
+      "id": "conformance-pre-1-0",
+      "response": { "status": 400, "body": { "accepted": false, "violations": [ { "source": "conformance", "rule": "som_version.pre_1_0", "message": "pre-1.0", "path": "/som_version" } ] } },
+      "expect": { "kind": "refused", "source": "conformance", "rule": "som_version.pre_1_0", "retry": "none" }
+    },
+    {
+      "id": "policy-unsupported-major",
+      "response": { "status": 400, "body": { "accepted": false, "violations": [ { "source": "policy", "rule": "som_version.unsupported_major", "message": "SOM 1.x only", "path": "/som_version" } ] } },
+      "expect": { "kind": "refused", "source": "policy", "rule": "som_version.unsupported_major", "retry": "none" }
+    },
+    {
+      "id": "policy-message-type-mismatch",
+      "response": { "status": 400, "body": { "accepted": false, "violations": [ { "source": "policy", "rule": "payload.message_type_mismatch", "message": "disagrees", "path": "/payload/message_type" } ] } },
+      "expect": { "kind": "refused", "source": "policy", "rule": "payload.message_type_mismatch", "retry": "none" }
+    },
+    {
+      "id": "policy-message-type-unknown",
+      "response": { "status": 400, "body": { "accepted": false, "violations": [ { "source": "policy", "rule": "message_type.unknown", "message": "no SOM 1.0 schema", "path": "/message_type" } ] } },
+      "expect": { "kind": "refused", "source": "policy", "rule": "message_type.unknown", "retry": "none" }
+    },
+    {
+      "id": "edge-unauthenticated",
+      "response": { "status": 401, "body": { "accepted": false, "violations": [ { "source": "policy", "rule": "producer.unauthenticated", "message": "missing, invalid or expired credentials" } ] } },
+      "expect": { "kind": "refused", "source": "policy", "rule": "producer.unauthenticated", "retry": "refresh_token" }
+    },
+    {
+      "id": "edge-not-registered",
+      "response": { "status": 403, "body": { "accepted": false, "violations": [ { "source": "policy", "rule": "producer.not_registered", "message": "not a registered producer" } ] } },
+      "expect": { "kind": "refused", "source": "policy", "rule": "producer.not_registered", "retry": "none" }
+    },
+    {
+      "id": "system-id-not-allowed",
+      "response": { "status": 403, "body": { "accepted": false, "violations": [ { "source": "policy", "rule": "producer.system_id_not_allowed", "message": "not granted", "path": "/originating_system/system_id" } ] } },
+      "expect": { "kind": "refused", "source": "policy", "rule": "producer.system_id_not_allowed", "path": "/originating_system/system_id", "retry": "none" }
+    },
+    {
+      "id": "message-type-not-allowed",
+      "response": { "status": 403, "body": { "accepted": false, "violations": [ { "source": "policy", "rule": "producer.message_type_not_allowed", "message": "not granted", "path": "/message_type" } ] } },
+      "expect": { "kind": "refused", "source": "policy", "rule": "producer.message_type_not_allowed", "retry": "none" }
+    },
+    {
+      "id": "message-id-reused",
+      "response": { "status": 409, "body": { "accepted": false, "violations": [ { "source": "policy", "rule": "message_id.reused", "message": "different message", "path": "/message_id" } ] } },
+      "expect": { "kind": "refused", "source": "policy", "rule": "message_id.reused", "retry": "none" }
+    },
+    {
+      "id": "commit-contention",
+      "description": "Retryable only with a fresh snapshot, which the caller builds: the SDK never resends it",
+      "response": { "status": 409, "body": { "accepted": false, "violations": [ { "source": "policy", "rule": "commit.contention", "message": "concurrent writers" } ] } },
+      "expect": { "kind": "refused", "source": "policy", "rule": "commit.contention", "retry": "none" }
+    },
+    {
+      "id": "sequence-not-increasing",
+      "response": { "status": 409, "body": { "accepted": false, "violations": [ { "source": "sequence", "rule": "sequence_number.not_increasing", "message": "stale", "path": "/payload/sequence_number" } ] } },
+      "expect": { "kind": "refused", "source": "sequence", "rule": "sequence_number.not_increasing", "retry": "none" }
+    },
+    {
+      "id": "sequence-updated-at-backwards",
+      "response": { "status": 409, "body": { "accepted": false, "violations": [ { "source": "sequence", "rule": "updated_at.backwards", "message": "backwards", "path": "/payload/updated_at" } ] } },
+      "expect": { "kind": "refused", "source": "sequence", "rule": "updated_at.backwards", "retry": "none" }
+    },
+    {
+      "id": "sequence-members-missing",
+      "response": { "status": 409, "body": { "accepted": false, "violations": [ { "source": "sequence", "rule": "snapshot.members_missing", "message": "a delta", "path": "/payload" } ] } },
+      "expect": { "kind": "refused", "source": "sequence", "rule": "snapshot.members_missing", "retry": "none" }
+    },
+    {
+      "id": "sequence-assets-dropped",
+      "response": { "status": 409, "body": { "accepted": false, "violations": [ { "source": "sequence", "rule": "snapshot.assets_dropped", "message": "dropped", "path": "/payload/assets" } ] } },
+      "expect": { "kind": "refused", "source": "sequence", "rule": "snapshot.assets_dropped", "retry": "none" }
+    },
+    {
+      "id": "sequence-asset-type-changed",
+      "response": { "status": 409, "body": { "accepted": false, "violations": [ { "source": "sequence", "rule": "asset.type_changed", "message": "changed", "path": "/payload/assets" } ] } },
+      "expect": { "kind": "refused", "source": "sequence", "rule": "asset.type_changed", "retry": "none" }
+    },
+    {
+      "id": "sequence-left-terminal",
+      "response": { "status": 409, "body": { "accepted": false, "violations": [ { "source": "sequence", "rule": "story_type.left_terminal", "message": "terminal", "path": "/payload/story_type" } ] } },
+      "expect": { "kind": "refused", "source": "sequence", "rule": "story_type.left_terminal", "retry": "none" }
+    },
+    {
+      "id": "too-large",
+      "response": { "status": 413, "body": { "accepted": false, "violations": [ { "source": "policy", "rule": "message.too_large", "message": "over 240000 bytes" } ] } },
+      "expect": { "kind": "refused", "source": "policy", "rule": "message.too_large", "retry": "none" }
+    },
+    {
+      "id": "publish-failed",
+      "response": { "status": 503, "body": { "accepted": false, "violations": [ { "source": "policy", "rule": "bus.publish_failed", "message": "safe to retry with the same message_id" } ] } },
+      "expect": { "kind": "refused", "source": "policy", "rule": "bus.publish_failed", "retry": "backoff" }
+    },
+    {
+      "id": "throttled-plain-body",
+      "description": "API Gateway's throttle answers in its own format",
+      "response": { "status": 429, "body": { "message": "Too Many Requests" } },
+      "expect": { "kind": "refused", "source": "transport", "rule": "http.429", "retry": "backoff" }
+    },
+    {
+      "id": "edge-timeout",
+      "response": { "status": 504, "body": { "message": "Endpoint request timed out" } },
+      "expect": { "kind": "refused", "source": "transport", "rule": "http.504", "retry": "backoff" }
+    },
+    {
+      "id": "not-json-body",
+      "response": { "status": 502, "body": null },
+      "expect": { "kind": "refused", "source": "transport", "rule": "http.502", "retry": "backoff" }
+    },
+    {
+      "id": "unknown-source-kept",
+      "description": "A source this SDK doesn't know is passed through, not dropped",
+      "response": { "status": 403, "body": { "accepted": false, "violations": [ { "source": "registry", "rule": "grant.expired", "message": "grant expired" } ] } },
+      "expect": { "kind": "refused", "source": "registry", "rule": "grant.expired", "retry": "none" }
+    }
+  ]
+}
