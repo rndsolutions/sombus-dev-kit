@@ -5,16 +5,16 @@
 [SOM Managed Bus](https://sombus.rnd-solutions.net) is a hosted message bus for the
 [Story Object Model](https://github.com/storyobjectmodel/som) (SOM), run by RND Solutions as a service.
 Newsroom systems publish SOM messages to it and read them from it. This repository is the open side: the
-code you build with, and the fixtures and checks to prove it works. The bus itself isn't here: you use it
-through its API, with a workspace from the portal.
+code you build with, and the checks to prove it works. The bus itself isn't here: you use it through its
+API, with a workspace from the portal.
 
-| | For | Status |
-|---|---|---|
-| [`sdk/`](sdk/) | Client libraries, one design and a shared [conformance kit](sdk/conformance/). TypeScript first | First slice: tokens, envelopes, publishing with retries and typed verdicts |
-| [`examples/`](examples/) | Runnable reference apps: a producer and a consumer, against your workspace | Available |
-| [`executors/`](executors/) | Reference **skill executors** for the SOM skill library | Planned |
-| [`spec/`](spec/), [`fixtures/`](fixtures/), [`runner/`](runner/), [`registration/`](registration/), [`configs/`](configs/) | The executor contract, skill fixtures, `som-skill test`, and configured-instance checks | Planned |
-| [`upstream/som-1.0/`](upstream/som-1.0/SOURCE.md) | SOM 1.0 schemas, examples and the skill library 0.2.2, pinned | Available |
+| | What's there |
+|---|---|
+| [`sdk/`](sdk/) | Client libraries: one design and a shared [conformance kit](sdk/conformance/). The TypeScript first slice covers tokens, envelopes, and publishing with retries and typed verdicts |
+| [`examples/`](examples/) | Runnable reference apps against your workspace: a producer, and a consumer on the HTTPS pull API |
+| [`executors/`](executors/) | Reference **skill executors** for the SOM skill library. First: [`raise-flag-on-match`](executors/raise-flag-on-match/), which passes the bus's skill harness |
+| [`spec/`](spec/) | The executor contract and RND's positions where the library leaves a question open |
+| [`upstream/som-1.0/`](upstream/som-1.0/SOURCE.md) | SOM 1.0 schemas, examples and the skill library 0.2.2, pinned |
 
 Documentation, including how to get a workspace and credentials: **[sombus.rnd-solutions.net/docs](https://sombus.rnd-solutions.net/docs/)**.
 
@@ -22,17 +22,18 @@ Documentation, including how to get a workspace and credentials: **[sombus.rnd-s
 
 ```bash
 npm install
-npm test                       # the SDK's unit tests and the conformance kit
-npm run example:publish        # needs a vendor workspace: see examples/README.md
+npm test                                  # the SDK, the conformance kit and the executors
+npm run example:publish                   # needs a vendor workspace: see examples/README.md
+npm run executor:raise-flag-on-match      # see executors/raise-flag-on-match/README.md
 ```
 
 ## Skill executors
 
 The SOM skill library publishes **specifications** of editorial skills (raise a flag when a field matches,
 hold while flagged, gate by scope…) that newsroom systems run over `story.context` and other SOM messages.
-The code that runs a skill is a **skill executor**, and every vendor writes their own. `executors/` will
-hold one open implementation of each, with the fixtures and tools to prove them: see how a library skill
-behaves in code you can run, start your own from a working one, and test yours against the same fixtures.
+The code that runs a skill is a **skill executor**, and every vendor writes their own. `executors/` holds
+open implementations: see how a library skill behaves in code you can run, start your own from a working
+one, and grade yours with the skill harness in your workspace's **Test runs**.
 
 ## What this is not
 
@@ -49,36 +50,23 @@ behaves in code you can run, start your own from a working one, and test yours a
 | Upstream commit | [`7297fef`](https://github.com/storyobjectmodel/som/commit/7297fef9adc6d14a74bdd7550c78decaa099a1ad), pinned in [`upstream/som-1.0/`](upstream/som-1.0/SOURCE.md) |
 | Suite id | `som-1.0.0+lib-0.2.2` |
 
-## Layout
+## Roadmap
 
-```
-sdk/                the SDK design, the conformance kit, and one folder per language (typescript/ first)
-examples/           reference producer and consumer apps, on the SDK
-upstream/som-1.0/   schema, examples, skills and tools at the pinned commit, SHA-256 checked, never edited
-spec/               the executor contract and RND positions on open library questions
-executors/<skill>/  one executor per library skill
-configs/            example configured instances, with neutral identifiers only
-fixtures/           trigger and no-trigger cases per skill, from each skill's evaluation table
-registration/       resolves configured {{ config.* }} paths against the schema
-runner/             som-skill test: plays fixtures to an executor and checks its warnings
-scripts/            repo checks
-```
+What comes next, in roughly this order. Folders appear when their code does.
 
-## Executor status
-
-| Skill | Executor |
-|---|---|
-| `raise-flag-on-match` | planned (first) |
-| `gate-by-scope` | planned (first) |
-| `flag-on-mismatch` | planned (first) |
-| `hold-while-flagged` | planned |
-| `apply-clearance`, `enrich-on-condition`, `match-and-propose`, `record-provenance-on-ingest`, `select-provider-by-context`, `surface-on-context-match` | planned |
-| `declare-context-on-commit` | waiting: proposed upstream, not yet in the library |
+- **`som-skill test`**: grade an executor from your command line and CI, against your workspace's sandbox.
+- **More executors**: `gate-by-scope` and `flag-on-mismatch`, then `hold-while-flagged` and the rest of the
+  library. `declare-context-on-commit` waits for the working group to add it.
+- **Clearance** in `raise-flag-on-match`, once houses can supply their authority scale.
+- **Registration checks**: every configured `{{ config.* }}` path resolved against the schema before an
+  instance is accepted, offered upstream once proven.
+- **SDK**: the consumer, the validator and the dry run in TypeScript, then Python, .NET and Java, and
+  packages on the registries.
 
 ## Checks
 
 ```bash
-npm run typecheck && npm test       # SDK and examples
+npm run typecheck && npm test       # SDK, examples and executors
 scripts/verify-upstream.sh          # the pinned upstream is byte-for-byte what SOURCE.md says
 scripts/check-upstream-skills.sh    # the library's own five validators, against the pinned schema
 ```

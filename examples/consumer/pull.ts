@@ -10,50 +10,23 @@
  * - Unknown message types and extensions are ignored, not failed.
  * - Acknowledge what you handled; release (nack) what you want redelivered.
  *
- * The SDK's consumer module is designed but not built, so this uses fetch and the SDK's token
- * provider. State lives in memory here; a real consumer keeps it in its own store.
+ * State lives in memory here; a real consumer keeps it in its own store.
  * Stops after SOMBUS_IDLE_POLLS empty long polls (default 3), or runs until Ctrl-C with 0.
  */
-import { ClientCredentials, TokenError, type SomEnvelope } from '../../sdk/typescript/src/index.js';
+import { TokenError } from '../../sdk/typescript/src/index.js';
 import { env } from '../env.js';
+import { PullClient, type Received } from '../lib/pull.js';
 
-interface Received {
-  receipt_handle: string;
-  message_type: string;
-  receive_count: number;
-  envelope: SomEnvelope;
-}
-
-const baseUrl = env('SOMBUS_BASE_URL', 'https://api.sombus.rnd-solutions.net/v1/');
-const clientId = env('SOMBUS_CLIENT_ID');
-const queue = new URL(`tenants/${env('SOMBUS_WORKSPACE')}/consumers/${clientId}/`, baseUrl);
-const idleLimit = Number(env('SOMBUS_IDLE_POLLS', '3'));
-
-const auth = new ClientCredentials({
-  tokenUrl: new URL('oauth/token', baseUrl).toString(),
-  clientId,
+const queue = new PullClient({
+  baseUrl: env('SOMBUS_BASE_URL', 'https://api.sombus.rnd-solutions.net/v1/'),
+  workspace: env('SOMBUS_WORKSPACE'),
+  clientId: env('SOMBUS_CLIENT_ID'),
   clientSecret: env('SOMBUS_CLIENT_SECRET'),
 });
+const idleLimit = Number(env('SOMBUS_IDLE_POLLS', '3'));
 
 const seen = new Set<string>();               // message_ids already acted on
 const latest = new Map<string, number>();     // story_id → highest sequence_number held
-
-async function call(path: string, init: RequestInit = {}, retried = false): Promise<Response> {
-  const token = await auth.getToken({ forceRefresh: retried });
-  const r = await fetch(new URL(path, queue), {
-    ...init,
-    headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
-  });
-  if (r.status === 401 && !retried) return call(path, init, true);   // one new token, then final
-  if (r.status === 429 || r.status >= 500) {
-    const wait = Number(r.headers.get('retry-after') ?? 5);
-    console.error(`  ${r.status}, retrying in ${wait}s`);
-    await new Promise((res) => setTimeout(res, wait * 1000));
-    return call(path, init, retried);
-  }
-  if (!r.ok) throw new Error(`${r.status} ${JSON.stringify(await r.json().catch(() => null))}`);
-  return r;
-}
 
 /** Returns true when the message is handled (ack it), false to have it redelivered (nack it). */
 function handle(m: Received): boolean {
@@ -79,15 +52,15 @@ function handle(m: Received): boolean {
 let idle = 0;
 try {
   while (idleLimit === 0 || idle < idleLimit) {
-    const { messages } = (await (await call('messages?max=10&wait=20')).json()) as { messages: Received[] };
+    const messages = await queue.receive();
     if (messages.length === 0) { idle++; continue; }
     idle = 0;
 
     const ack: string[] = [];
     const nack: string[] = [];
     for (const m of messages) (handle(m) ? ack : nack).push(m.receipt_handle);
-    if (ack.length) await call('ack', { method: 'POST', body: JSON.stringify({ receipt_handles: ack }) });
-    if (nack.length) await call('nack', { method: 'POST', body: JSON.stringify({ receipt_handles: nack, delay_seconds: 30 }) });
+    await queue.ack(ack);
+    await queue.nack(nack);
   }
 } catch (e) {
   if (!(e instanceof TokenError) || e.retryable) throw e;

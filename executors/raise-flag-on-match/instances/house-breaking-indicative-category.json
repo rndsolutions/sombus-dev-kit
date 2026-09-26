@@ -1,0 +1,8 @@
+{
+  "instance_label": "house-breaking-indicative-category",
+  "match_field": "lifecycle.phase",
+  "match_value": "BREAKING",
+  "flag_name": "indicative-category",
+  "severity": "flag",
+  "clearing_authority": "duty-editor"
+}

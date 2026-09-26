@@ -4,15 +4,20 @@
   "description": "SOM Managed Bus developer kit: SDKs, conformance kit, reference examples and skill executors.",
   "license": "Apache-2.0",
   "type": "module",
-  "engines": { "node": ">=20" },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "typecheck": "tsc -p tsconfig.json",
     "test": "vitest run",
     "example:publish": "tsx examples/publisher/publish-story.ts",
-    "example:consume": "tsx examples/consumer/pull.ts"
+    "example:consume": "tsx examples/consumer/pull.ts",
+    "executor:raise-flag-on-match": "tsx executors/raise-flag-on-match/run.ts"
   },
   "devDependencies": {
     "@types/node": "^22.10.0",
+    "ajv": "^8.17.1",
+    "ajv-formats": "^3.0.1",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
     "vitest": "^3.0.0"

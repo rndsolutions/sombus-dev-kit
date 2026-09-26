@@ -1,14 +1,24 @@
 {
   "compilerOptions": {
     "target": "ES2022",
-    "lib": ["ES2022", "DOM"],
+    "lib": [
+      "ES2022",
+      "DOM"
+    ],
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
     "strict": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "types": ["node"],
+    "types": [
+      "node"
+    ],
     "noEmit": true
   },
-  "include": ["sdk/typescript/src/**/*.ts", "sdk/typescript/test/**/*.ts", "examples/**/*.ts"]
+  "include": [
+    "sdk/typescript/src/**/*.ts",
+    "sdk/typescript/test/**/*.ts",
+    "examples/**/*.ts",
+    "executors/**/*.ts"
+  ]
 }
