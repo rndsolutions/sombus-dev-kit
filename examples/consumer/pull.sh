@@ -1,14 +1,15 @@
 #!/usr/bin/env bash
 # Pull your consumer connection's queue from SOM Managed Bus, with nothing but curl and jq: the
-# quickest way to see messages arrive, before you write a consumer. It asks for anything it needs
-# that isn't set, the connection's secret without echoing it, and never stores or prints it.
+# quickest way to see messages arrive, before you write a consumer. At a terminal it asks for the
+# connection's details, offering any SOMBUS_* value already set as the default; the secret is read
+# without echoing, and never stored or printed. Without a terminal it takes them from the environment.
 #
 #   examples/consumer/pull.sh                  # asks for workspace, connection id and secret
 #   examples/consumer/pull.sh --staging        # the staging environment instead of the Sandbox
 #   examples/consumer/pull.sh --no-ack         # look without removing: messages come back after --visibility seconds
 #   examples/consumer/pull.sh --once --full    # one batch, each message's whole envelope
 #
-# The same settings as the TypeScript examples (examples/README.md), from the environment if set:
+# The same settings as the TypeScript examples (examples/README.md), as defaults when set:
 #   SOMBUS_BASE_URL, SOMBUS_WORKSPACE, SOMBUS_CLIENT_ID, SOMBUS_CLIENT_SECRET
 #
 # The workspace is the one your consumer connection is in: yours, or the house's for a connection
@@ -16,7 +17,7 @@
 # portal (Get client secret), shown once.
 set -euo pipefail
 
-usage() { sed -n '2,16p' "$0" | sed 's/^# \{0,1\}//'; exit "${1:-0}"; }
+usage() { awk 'NR > 1 && /^#/ { sub(/^# ?/, ""); print; next } NR > 1 { exit }' "$0"; exit "${1:-0}"; }
 
 BASE_URL="${SOMBUS_BASE_URL:-https://api.sombus.rnd-solutions.net/v1/}"
 ACK=1 ONCE=0 FULL=0 MAX=10 WAIT=20 VISIBILITY=60
@@ -41,11 +42,20 @@ for tool in curl jq; do
   command -v "$tool" >/dev/null || { echo "This script needs $tool." >&2; exit 2; }
 done
 
-ask() { # ask <variable> <prompt> [secret]
-  local current="${!1:-}"
-  if [ -n "$current" ]; then printf -v "$1" '%s' "$current"; return; fi
-  [ -t 0 ] || { echo "Set $1 (no terminal to ask on)." >&2; exit 2; }
-  if [ "${3:-}" = secret ]; then read -r -s -p "$2: " "$1"; echo >&2; else read -r -p "$2: " "$1"; fi
+ask() { # ask <variable> <prompt> [secret]: at a terminal always, the environment's value as the default
+  local current="${!1:-}" answer hint
+  if [ ! -t 0 ]; then
+    [ -n "$current" ] || { echo "Set $1 (no terminal to ask on)." >&2; exit 2; }
+    return
+  fi
+  if [ "${3:-}" = secret ]; then
+    hint=${current:+" [set in the environment: Enter keeps it]"}
+    read -r -s -p "$2$hint: " answer; echo >&2
+  else
+    hint=${current:+" [$current]"}
+    read -r -p "$2$hint: " answer
+  fi
+  printf -v "$1" '%s' "${answer:-$current}"
   [ -n "${!1}" ] || { echo "$1 is required." >&2; exit 2; }
 }
 ask SOMBUS_WORKSPACE "Workspace id (w…) the connection is in"
@@ -76,7 +86,7 @@ call() { # call <method> <path> [body file] → the answer in $TMP/answer.json, 
 }
 
 token
-echo "Pulling $SOMBUS_CLIENT_ID in $SOMBUS_WORKSPACE at $BASE_URL (Ctrl-C to stop)" >&2
+echo "Pulling connection $SOMBUS_CLIENT_ID in workspace $SOMBUS_WORKSPACE at $BASE_URL (Ctrl-C to stop)" >&2
 total=0
 while :; do
   status=$(call GET "messages?max=$MAX&wait=$WAIT&visibility=$VISIBILITY")
