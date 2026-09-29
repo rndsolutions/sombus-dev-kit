@@ -11,9 +11,9 @@ API, with a workspace from the portal.
 | | What's there |
 |---|---|
 | [`sdk/`](sdk/) | Client libraries: one design and a shared [conformance kit](sdk/conformance/). The TypeScript first slice covers tokens, envelopes, and publishing with retries and typed verdicts |
-| [`examples/`](examples/) | Runnable reference apps against your workspace: a producer, and a consumer on the HTTPS pull API |
+| [`examples/`](examples/) | Runnable reference apps against your workspace: a producer, a consumer on the HTTPS pull API, and a [live newsroom](examples/newsroom/) whose systems react to each other through the bus |
 | [`executors/`](executors/) | Reference **skill executors** for the SOM skill library. First: [`raise-flag-on-match`](executors/raise-flag-on-match/), which passes the bus's skill harness |
-| [`spec/`](spec/) | The executor contract and RND's positions where the library leaves a question open |
+| [`spec/`](spec/) | The executor contract, RND's positions where the library leaves a question open, and the [live newsroom's contract](spec/live-newsroom.json) |
 | [`upstream/som-1.0/`](upstream/som-1.0/SOURCE.md) | SOM 1.0 schemas, examples and the skill library 0.2.2, pinned |
 
 Documentation, including how to get a workspace and credentials: **[sombus.rnd-solutions.net/docs](https://sombus.rnd-solutions.net/docs/)**.
@@ -25,6 +25,7 @@ npm install
 npm test                                  # the SDK, the conformance kit and the executors
 npm run example:publish                   # needs a vendor workspace: see examples/README.md
 npm run executor:raise-flag-on-match      # see executors/raise-flag-on-match/README.md
+npm run newsroom                          # a whole newsroom on your house: see examples/newsroom/README.md
 ```
 
 ## Skill executors

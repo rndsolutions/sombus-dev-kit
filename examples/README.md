@@ -9,6 +9,7 @@ SOM 1.0 examples in [`../upstream/som-1.0/`](../upstream/som-1.0/SOURCE.md)).
 | [`publisher/publish-story.ts`](publisher/publish-story.ts) | A producer: builds each envelope once, publishes a story's seven snapshots in order, and handles every verdict (accepted, duplicate, refused) and both errors (no final answer, credentials refused) |
 | [`consumer/pull.ts`](consumer/pull.ts) | A consumer on the HTTPS pull API: long poll, deduplicate on `message_id`, keep the highest `sequence_number` per story, ignore what it doesn't know, acknowledge |
 | [`consumer/pull.sh`](consumer/pull.sh) | The quickest look at a consumer queue, with only `curl` and `jq`: asks for the connection's details (the secret hidden), gets a token, pulls, prints one line per message and acknowledges. No Node needed |
+| [`newsroom/`](newsroom/) | A live newsroom: an actor per newsroom system, each on its own connections, reacting to each other through the bus. Run it against your own house with one command |
 | [`../executors/raise-flag-on-match/`](../executors/raise-flag-on-match/) | A skill executor: reads triggers as a consumer, publishes `skill.warning.raised` as a producer. Grade it with the skill harness in **Test runs** |
 
 ## What you need

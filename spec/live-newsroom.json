@@ -1,0 +1,97 @@
+{
+  "$comment": "The live newsroom's contract: a fictional newsroom (Meridian News) played by one process per role, each on its own connections, reacting to each other through the bus. examples/newsroom implements it; its tests check the actors against this file.",
+  "version": 1,
+  "newsroom_id": "demo",
+  "story_id_suffix": ".demo-live-<yyyymmdd>",
+  "time_zone": "Europe/London",
+  "roles_path": "/jwt/live/roles",
+  "roles_view": {
+    "house": "string",
+    "roles": "Record<role, { held_by: 'actor' | 'real', connection_id?: string }>"
+  },
+  "roles": ["ncs", "mam", "skill", "graphics", "standards", "playout", "cms", "automation"],
+  "apps": {
+    "ncs": "Meridian NCS (live actor)",
+    "mam": "Media store (live actor)",
+    "skill": "Skill executor (reference, live)",
+    "graphics": "Graphics (live actor)",
+    "standards": "Standards desk (live actor)",
+    "playout": "Playout (live actor)",
+    "cms": "Web CMS (live actor)",
+    "automation": "Automation (live actor)"
+  },
+  "system_types": {
+    "ncs": "ncs",
+    "mam": "archive",
+    "skill": "skill_worker",
+    "graphics": "graphics",
+    "standards": "compliance_engine",
+    "playout": "automation",
+    "cms": "custom",
+    "automation": "automation"
+  },
+  "grants": {
+    "ncs": ["story.context"],
+    "mam": ["delivery.media_available", "story.context"],
+    "skill": ["skill.warning.raised"],
+    "graphics": ["link.committed", "link.withdrawn"],
+    "standards": ["link.gate_changed", "system.audit"],
+    "playout": ["telling.*"],
+    "cms": ["story.context", "link.committed", "telling.*"],
+    "automation": ["system.audit"]
+  },
+  "actors": [
+    {
+      "role": "ncs",
+      "trigger": { "what": "Plays the pack's ambient day: each story beat as the next story.context snapshot (the break, the updates, the correction, the kill).", "publishes": ["story.context"] },
+      "reactions": [
+        { "on": "delivery.media_available", "when": "Media for one of its stories lands: the next snapshot attaches it as an asset.", "publishes": ["story.context"] }
+      ]
+    },
+    {
+      "role": "mam",
+      "trigger": { "what": "Files the tip-line clip as an orphan story (source UNVERIFIED) early in the day.", "publishes": ["story.context"] },
+      "reactions": [
+        { "on": "story.context", "when": "A story's first snapshot (sequence 1) asks for coverage: the press-conference feed lands.", "publishes": ["delivery.media_available"] }
+      ]
+    },
+    {
+      "role": "skill",
+      "reactions": [
+        { "on": "story.context", "when": "Every snapshot: the reference executor evaluates the house's raise-flag-on-match instances and raises what matches (UNVERIFIED source, HIGH priority).", "publishes": ["skill.warning.raised"] }
+      ]
+    },
+    {
+      "role": "graphics",
+      "reactions": [
+        { "on": "story.context", "when": "A snapshot carries an on-screen element (the outage lower third): books it, gate PENDING. A kill: withdraws what it booked.", "publishes": ["link.committed", "link.withdrawn"] }
+      ]
+    },
+    {
+      "role": "standards",
+      "reactions": [
+        { "on": "link.committed", "when": "A link waits on a PENDING gate: clears it and records why.", "publishes": ["link.gate_changed", "system.audit"] }
+      ]
+    },
+    {
+      "role": "playout",
+      "reactions": [
+        { "on": "link.gate_changed", "when": "A booked link's gate is cleared: takes it to air.", "publishes": ["telling.started"] },
+        { "on": "story.context", "when": "A kill: takes what is on air off.", "publishes": ["telling.ended"] }
+      ]
+    },
+    {
+      "role": "cms",
+      "reactions": [
+        { "on": "telling.started", "when": "A story goes to air: puts it on the live web page.", "publishes": ["link.committed", "telling.started"] },
+        { "on": "story.context", "when": "A kill: ends its web publication.", "publishes": ["telling.ended"] }
+      ]
+    },
+    {
+      "role": "automation",
+      "reactions": [
+        { "on": "story.context", "when": "A kill: suppresses what the story left behind and records it.", "publishes": ["system.audit"] }
+      ]
+    }
+  ]
+}
